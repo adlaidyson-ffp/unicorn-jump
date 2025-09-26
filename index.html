@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unicorn Jump</title>
+    
+    <meta name="title" content="Unicorn Jump">
+    <meta name="description" content="Unicorn Jump: A magical, retro-style endless runner game featuring a jumping unicorn! Playable on desktop and mobile.">
+    <meta name="keywords" content="unicorn jump, retro game, endless runner, arcade, double jump, HTML5 game">
+    <meta name="author" content="Adlai Dyson | Fused Frame Photography">
+    
+    <link rel="icon" type="image/png" href="https://cdn.fusedframe.co.uk/unicorn-jump/logos/Unicorn-Jump-Favicon-(Transparent).png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        /* Basic styles for the page */
+        body {
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Press Start 2P', cursive;
+            background: linear-gradient(135deg, #4c1d2e, #2c1a3b); /* Darker background */
+            color: #fff;
+            overflow: hidden;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* *** START CHANGE: New Styles for the Game Title Banner *** */
+        .game-title-banner {
+            width: 100%;
+            max-width: 350px; /* Max width to keep it proportionate to the game box */
+            margin-bottom: 20px; /* Space between logo and game box */
+            text-align: center;
+        }
+
+        .game-title-banner img {
+            width: 90%; /* Responsive width */
+            height: auto;
+            opacity: 0.95;
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4)); /* Glow effect */
+        }
+        /* *** END CHANGE *** */
+
+        /* Container for the game canvas and UI elements */
+        .game-container {
+            position: relative;
+            width: 90vw;
+            height: 80vh;
+            max-width: 800px;
+            max-height: 500px;
+            border: 4px solid #fff;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), inset 0 0 15px rgba(255, 255, 255, 0.3);
+            overflow: hidden;
+            background: linear-gradient(135deg, #ffc0cb, #d3a2e2); /* Original gradient on the game box */
+        }
+        /* The main game canvas */
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        /* Overlay for messages like "Game Over" or "Tap to Start" */
+        .message-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background-color: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(2px);
+            z-index: 10;
+        }
+        .message-overlay h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5em;
+        }
+        .message-overlay p {
+            font-size: 1rem;
+        }
+        .message-overlay .instructions {
+            font-size: 0.8rem;
+            margin-top: 2em;
+            max-width: 80%;
+            line-height: 1.5;
+        }
+        /* Simple class to hide elements */
+        .hidden {
+            display: none;
+        }
+        /* Styling for score and high score displays */
+        .score-display {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.2rem;
+        }
+        .high-score-display {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 1rem;
+        }
+        /* Footer styling */
+        footer {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        footer img {
+            width: 130px;
+            opacity: 0.8;
+        }
+        footer p {
+            margin: 0;
+            font-size: 0.8rem;
+        }
+        .github-btn {
+            background-color: #ffc0cb;
+            color: #2c1a3b;
+            text-decoration: none;
+            padding: 8px 16px; 
+            border-radius: 10px;
+            font-size: 0.8rem; 
+            text-shadow: none;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
+        }
+        .github-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+            background-color: #f8a7b9;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-title-banner">
+        <img src="https://cdn.fusedframe.co.uk/unicorn-jump/logos/Unicorn-Jump-Banner-Logo-(Transparent).png" alt="Unicorn Jump Logo">
+    </div>
+    <div class="game-container">
+        <canvas id="gameCanvas"></canvas>
+        <div id="startScreen" class="message-overlay">
+            <h1>Unicorn Jump</h1>
+            <p>Press Space or Tap to Start</p>
+            <p class="instructions">Tap once to jump, and tap again in mid-air for a double jump! You must jump over ALL obstacles, even the high ones!</p>
+        </div>
+        <div id="gameOverScreen" class="message-overlay hidden">
+            <h1>Game Over</h1>
+            <p>Press Space or Tap to Restart</p>
+        </div>
+        <div id="highScoreDisplay" class="high-score-display">HI 0</div>
+        <div id="scoreDisplay" class="score-display">0</div>
+    </div>
+
+    <footer>
+        <img src="https://cdn.fusedframe.co.uk/main-logos/png/Banner%20Logo%20(No%20Circle)%20Light%20(Transparent).png" alt="Banner Logo">
+        <p>Made for Leilani</p>
+        <a href="#" class="github-btn">View on GitHub</a>
+    </footer>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // UI Elements
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const highScoreDisplay = document.getElementById('highScoreDisplay');
+        const startScreen = document.getElementById('startScreen');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+
+        // Game state variables
+        let isPlaying = false;
+        let score = 0;
+        let highScore = localStorage.getItem('unicornHighScore') || 0;
+        let gameSpeed = 5;
+        let obstacles = [];
+        let particles = [];
+        let stars = [];
+        let frameCount = 0;
+        let nextObstacleFrame = 100;
+
+        // Unicorn sprite
+        const unicornImage = new Image();
+        let isImageLoaded = false;
+        unicornImage.onload = () => {
+            isImageLoaded = true;
+            drawUnicorn(); // Draw initial frame
+        };
+        unicornImage.src = 'https://cdn.fusedframe.co.uk/unicorn-jump/sprite/Unicorn-Sprite.png';
+        
+        // Constants
+        const GRAVITY = 0.6;
+        const JUMP_STRENGTH = -12;
+        const GROUND_HEIGHT_RATIO = 0.85;
+        const COLLISION_PADDING = 18; 
+
+        // Unicorn properties
+        const unicorn = {
+            x: 50,
+            y: 0, // Will be set dynamically
+            width: 85, 
+            height: 85, 
+            velocityY: 0,
+            jumpsLeft: 2,
+            isGrounded: true,
+        };
+
+        // Resize the canvas to fit its container
+        function resizeCanvas() {
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+            unicorn.y = canvas.height * GROUND_HEIGHT_RATIO - unicorn.height; // Set initial y position
+            createStars();
+        }
+
+        // --- Drawing Functions ---
+
+        function createStars() {
+            stars = [];
+            for (let i = 0; i < 50; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * (canvas.height * GROUND_HEIGHT_RATIO),
+                    size: Math.random() * 2 + 1,
+                    opacity: Math.random() * 0.5 + 0.2
+                });
+            }
+        }
+
+        function drawStars() {
+            stars.forEach(star => {
+                ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        function drawGround() {
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 4;
+            const groundY = canvas.height * GROUND_HEIGHT_RATIO;
+            ctx.beginPath();
+            ctx.moveTo(0, groundY);
+            ctx.lineTo(canvas.width, groundY);
+            ctx.stroke();
+        }
+
+        function drawUnicorn() {
+            if (!isImageLoaded) return;
+            ctx.save();
+            const rotation = unicorn.isGrounded ? Math.sin(frameCount * 0.2) * 0.15 : 0;
+            ctx.translate(unicorn.x + unicorn.width / 2, unicorn.y + unicorn.height / 2);
+            ctx.rotate(rotation);
+            ctx.drawImage(unicornImage, -unicorn.width / 2, -unicorn.height / 2, unicorn.width, unicorn.height);
+            ctx.restore();
+        }
+        
+        function drawRainbow(obstacle) {
+            const colors = ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#0000ff', '#4b0082'];
+            const radius = obstacle.width / 2;
+            const yPos = obstacle.y + radius;
+            for (let i = 0; i < colors.length; i++) {
+                ctx.beginPath();
+                ctx.arc(obstacle.x + radius, yPos, radius - i * 4, Math.PI, 0, false);
+                ctx.strokeStyle = colors[i];
+                ctx.lineWidth = 4;
+                ctx.stroke();
+            }
+        }
+
+        function drawCloud(obstacle) {
+            ctx.fillStyle = '#f0f8ff';
+            ctx.beginPath();
+            ctx.arc(obstacle.x + 20, obstacle.y + 20, 20, Math.PI * 0.5, Math.PI * 1.5);
+            ctx.arc(obstacle.x + 40, obstacle.y + 10, 25, Math.PI * 1, Math.PI * 2);
+            ctx.arc(obstacle.x + 65, obstacle.y + 20, 20, Math.PI * 1.5, Math.PI * 0.5);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function drawObstacles() {
+            obstacles.forEach(obstacle => {
+                if (obstacle.type === 'rainbow') {
+                    drawRainbow(obstacle);
+                } else {
+                    drawCloud(obstacle);
+                }
+            });
+        }
+
+        function updateAndDrawParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.1; // A little gravity on particles
+                p.lifespan--;
+
+                if (p.lifespan <= 0) {
+                    particles.splice(i, 1);
+                } else {
+                    ctx.globalAlpha = p.lifespan / 60;
+                    ctx.fillStyle = '#f0e456';
+                    ctx.fillRect(p.x, p.y, p.size, p.size);
+                    ctx.globalAlpha = 1.0;
+                }
+            }
+        }
+
+        // --- Game Logic ---
+
+        function updateUnicorn() {
+            const groundY = canvas.height * GROUND_HEIGHT_RATIO;
+            unicorn.velocityY += GRAVITY;
+            unicorn.y += unicorn.velocityY;
+
+            // Prevent falling through the ground
+            if (unicorn.y + unicorn.height > groundY) {
+                unicorn.y = groundY - unicorn.height;
+                unicorn.velocityY = 0;
+                if (!unicorn.isGrounded) {
+                    unicorn.jumpsLeft = 2; // Reset jumps on landing
+                    unicorn.isGrounded = true;
+                }
+            }
+        }
+        
+        function jump() {
+            if (unicorn.jumpsLeft > 0) {
+                unicorn.velocityY = JUMP_STRENGTH;
+                unicorn.jumpsLeft--;
+                unicorn.isGrounded = false;
+                createJumpParticles();
+            }
+        }
+
+        function createJumpParticles() {
+            for (let i = 0; i < 10; i++) {
+                particles.push({
+                    x: unicorn.x + unicorn.width / 2,
+                    y: unicorn.y + unicorn.height,
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: Math.random() * -2 - 1,
+                    size: Math.random() * 3 + 2,
+                    lifespan: 60
+                });
+            }
+        }
+
+        function spawnObstacle() {
+            const groundY = canvas.height * GROUND_HEIGHT_RATIO;
+            const type = Math.random() > 0.4 ? 'rainbow' : 'cloud';
+            let obstacle;
+
+            if (type === 'rainbow') {
+                obstacle = {
+                    x: canvas.width,
+                    y: groundY - 50,
+                    width: 80,
+                    height: 50,
+                    type: 'rainbow',
+                    isHigh: false,
+                    cleared: false,
+                };
+            } else {
+                // Clouds can be at different heights
+                const isHighCloud = Math.random() > 0.5;
+                const cloudHeight = isHighCloud ? groundY - 120 : groundY - 50;
+                 obstacle = {
+                    x: canvas.width,
+                    y: cloudHeight,
+                    width: 80,
+                    height: 40,
+                    type: 'cloud',
+                    isHigh: isHighCloud,
+                    cleared: false,
+                };
+            }
+            obstacles.push(obstacle);
+        }
+
+        function updateObstacles() {
+            // Move existing obstacles
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                obstacles[i].x -= gameSpeed;
+                // Remove obstacles that have moved off-screen
+                if (obstacles[i].x + obstacles[i].width < 0) {
+                    obstacles.splice(i, 1);
+                }
+            }
+
+            // Spawn new obstacles
+            if (frameCount >= nextObstacleFrame) {
+                spawnObstacle();
+                // Randomize time until next obstacle
+                nextObstacleFrame = frameCount + Math.floor(Math.random() * 60 + 900 / gameSpeed);
+            }
+        }
+        
+        function checkCollisionsAndPasses() {
+            for (const obstacle of obstacles) {
+                // 1. Check for direct collision
+                if (unicorn.x < obstacle.x + obstacle.width - COLLISION_PADDING &&
+                    unicorn.x + unicorn.width > obstacle.x + COLLISION_PADDING &&
+                    unicorn.y < obstacle.y + obstacle.height - COLLISION_PADDING &&
+                    unicorn.y + unicorn.height > obstacle.y + COLLISION_PADDING) {
+                    return true; // Collision detected
+                }
+
+                // 2. Check for passing under a high obstacle
+                // If the obstacle has passed the unicorn and hasn't been cleared yet
+                if (!obstacle.cleared && obstacle.x + obstacle.width < unicorn.x) {
+                    if (obstacle.isHigh && unicorn.isGrounded) {
+                         return true; // Game over for passing under
+                    }
+                    obstacle.cleared = true; // Mark as successfully cleared
+                }
+            }
+            return false;
+        }
+
+        function updateScore() {
+            score++;
+            scoreDisplay.textContent = Math.floor(score / 10);
+            // Increase speed gradually
+            if (score > 0 && score % 200 === 0) {
+                gameSpeed += 0.2;
+            }
+        }
+
+        function resetGame() {
+            score = 0;
+            gameSpeed = 5;
+            obstacles = [];
+            particles = [];
+            frameCount = 0;
+            nextObstacleFrame = 150; // Give player more time at the start
+            unicorn.y = canvas.height * GROUND_HEIGHT_RATIO - unicorn.height;
+            unicorn.velocityY = 0;
+            unicorn.jumpsLeft = 2;
+            unicorn.isGrounded = true;
+            scoreDisplay.textContent = 0;
+        }
+
+        function startGame() {
+            resetGame();
+            isPlaying = true;
+            startScreen.classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
+            // Make the first jump happen immediately on start
+            jump();
+            gameLoop();
+        }
+
+        function endGame() {
+            isPlaying = false;
+            if (Math.floor(score / 10) > highScore) {
+                highScore = Math.floor(score / 10);
+                localStorage.setItem('unicornHighScore', highScore);
+                updateHighScoreDisplay();
+            }
+            gameOverScreen.classList.remove('hidden');
+        }
+
+        function updateHighScoreDisplay() {
+            highScoreDisplay.textContent = `HI ${highScore}`;
+        }
+        
+        function gameLoop() {
+            if (!isPlaying) return;
+
+            // Clear the canvas for the next frame
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Update game elements
+            frameCount++;
+            updateUnicorn();
+            updateObstacles();
+            updateScore();
+            
+            // Draw game elements
+            drawStars();
+            drawGround();
+            drawUnicorn();
+            drawObstacles();
+            updateAndDrawParticles();
+
+            // Check for game-ending conditions
+            if (checkCollisionsAndPasses()) {
+                endGame();
+                return;
+            }
+
+            // Request the next frame
+            requestAnimationFrame(gameLoop);
+        }
+
+        // --- Event Listeners ---
+        
+        function handleInput() {
+            if (!isPlaying) {
+                startGame();
+            } else {
+                jump();
+            }
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault(); // Prevent page from scrolling
+                handleInput();
+            }
+        });
+        
+        window.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // Prevent screen from zooming
+            handleInput();
+        }, { passive: false });
+
+        window.addEventListener('resize', resizeCanvas);
+
+        // --- Initial Setup ---
+        
+        // Initial setup on page load
+        resizeCanvas();
+        updateHighScoreDisplay();
+        drawGround();
+        drawStars();
+        // The unicorn image onload will trigger the first draw
+
+    </script>
+</body>
+</html>
