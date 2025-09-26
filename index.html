@@ -203,7 +203,6 @@
         <p>Made for Leilani</p>
         <a href="#" class="github-btn">View on GitHub</a>
     </footer>
-
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -219,13 +218,10 @@
         let score = 0;
         let highScore = localStorage.getItem('unicornHighScore') || 0;
         
-        // FIX 2: Rename gameSpeed to BASE_SPEED (a constant) and introduce a calculated speed variable
-        const BASE_GAME_SPEED = 5; // The speed at the standard canvas width (e.g., 800)
+        const BASE_GAME_SPEED = 5; 
         let gameSpeed = BASE_GAME_SPEED;
-        // The standard width your game logic was designed around
         const REFERENCE_WIDTH = 800; 
-        // END FIX 2
-
+        
         let obstacles = [];
         let particles = [];
         let stars = [];
@@ -237,7 +233,7 @@
         let isImageLoaded = false;
         unicornImage.onload = () => {
             isImageLoaded = true;
-            drawUnicorn(); // Draw initial frame
+            drawUnicorn(); 
         };
         unicornImage.src = 'https://cdn.fusedframe.co.uk/unicorn-jump/sprite/Unicorn-Sprite.png';
         
@@ -250,9 +246,7 @@
         // Unicorn properties
         const unicorn = {
             x: 10, 
-            y: 0, // Will be set dynamically
-            // FIX 2: Define unicorn size relative to a percentage of the canvas, or keep it fixed and scale other elements
-            // Let's keep it fixed and adjust it in the drawUnicorn function if needed, but for now let's scale the movement.
+            y: 0, 
             width: 85, 
             height: 85, 
             velocityY: 0,
@@ -260,31 +254,38 @@
             isGrounded: true,
         };
 
+        // **FIX 1: Pre-calculate the Star Field**
+        // Only create the stars once and manage their positions, do not create them on every resize unless necessary.
+        const MAX_STARS = 50; 
+        
         // Resize the canvas to fit its container
         function resizeCanvas() {
-            // FIX 1: The container's CSS handles its dimensions. This sets the internal drawing size.
-            // Using the client dimensions ensures the canvas fills the parent.
             canvas.width = canvas.clientWidth;
             canvas.height = canvas.clientHeight;
-            // Re-calculate the unicorn's start position based on the new height
             unicorn.y = canvas.height * GROUND_HEIGHT_RATIO - unicorn.height; 
             
-            // FIX 2: Recalculate gameSpeed based on the current canvas width
             gameSpeed = BASE_GAME_SPEED * (canvas.width / REFERENCE_WIDTH);
-            // Also scale the unicorn's size based on the new width
             unicorn.width = Math.max(50, Math.min(100, 85 * (canvas.width / REFERENCE_WIDTH)));
-            unicorn.height = unicorn.width; // Keep it square or adjust as needed
+            unicorn.height = unicorn.width; 
 
-            // Recreate stars for the new dimensions
-            createStars();
-            // END FIX 2
+            // **Fix 1: Only recreate stars if they haven't been created yet or if the canvas changes drastically**
+            if (stars.length === 0) {
+                createStars();
+            } else {
+                // Ensure star Y positions are recalculated relative to the new canvas height
+                stars.forEach(star => {
+                    if (star.y > canvas.height * GROUND_HEIGHT_RATIO) {
+                         star.y = Math.random() * (canvas.height * GROUND_HEIGHT_RATIO);
+                    }
+                });
+            }
         }
 
         // --- Drawing Functions ---
 
         function createStars() {
             stars = [];
-            for (let i = 0; i < 50; i++) {
+            for (let i = 0; i < MAX_STARS; i++) {
                 stars.push({
                     x: Math.random() * canvas.width,
                     y: Math.random() * (canvas.height * GROUND_HEIGHT_RATIO),
@@ -295,23 +296,25 @@
         }
 
         function drawStars() {
-            // FIX 2: Update star position slightly to simulate movement tied to speed
             const speedFactor = gameSpeed / BASE_GAME_SPEED;
-            stars.forEach(star => {
+            // **FIX 2: Optimize star loop**
+            for (let i = 0; i < stars.length; i++) {
+                const star = stars[i];
                 star.x -= 0.5 * speedFactor; // Slower than the main game speed
                 if (star.x < 0) {
                     star.x = canvas.width;
+                    // **FIX 2: Randomize Y position when wrapped to prevent banding**
+                    star.y = Math.random() * (canvas.height * GROUND_HEIGHT_RATIO); 
                 }
                 ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
                 ctx.beginPath();
                 ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
                 ctx.fill();
-            });
+            }
         }
-        // ... (The rest of the drawing and logic functions need to be updated to use the dynamic `gameSpeed` or scaled values) ...
-
-        // The rest of the functions are shown here with **minimal changes** required to fix the speed problem by using `gameSpeed`
         
+        // ... (drawGround, drawUnicorn, drawRainbow, drawCloud, drawObstacles are unchanged) ...
+
         function drawGround() {
             ctx.strokeStyle = '#fff';
             ctx.lineWidth = 4;
@@ -366,9 +369,10 @@
         }
 
         function updateAndDrawParticles() {
-            // FIX 2: Scale particle speed/gravity too for consistency across devices
             const scaleFactor = canvas.width / REFERENCE_WIDTH;
             const particleGravity = 0.1 * scaleFactor;
+            // **FIX 3: Limit the maximum number of particles**
+            const MAX_PARTICLES = 200; 
 
             for (let i = particles.length - 1; i >= 0; i--) {
                 const p = particles[i];
@@ -377,7 +381,7 @@
                 p.vy += particleGravity; 
                 p.lifespan--;
 
-                if (p.lifespan <= 0) {
+                if (p.lifespan <= 0 || particles.length > MAX_PARTICLES) { // **Added safety check**
                     particles.splice(i, 1);
                 } else {
                     ctx.globalAlpha = p.lifespan / 60;
@@ -391,7 +395,6 @@
         // --- Game Logic ---
 
         function updateUnicorn() {
-            // FIX 2: Scale gravity and jump based on device size
             const scaleFactor = canvas.width / REFERENCE_WIDTH;
             const scaledGRAVITY = GRAVITY * scaleFactor;
             const groundY = canvas.height * GROUND_HEIGHT_RATIO;
@@ -404,14 +407,13 @@
                 unicorn.y = groundY - unicorn.height;
                 unicorn.velocityY = 0;
                 if (!unicorn.isGrounded) {
-                    unicorn.jumpsLeft = 2; // Reset jumps on landing
+                    unicorn.jumpsLeft = 2; 
                     unicorn.isGrounded = true;
                 }
             }
         }
         
         function jump() {
-            // FIX 2: Scale jump strength based on device size
             const scaleFactor = canvas.width / REFERENCE_WIDTH;
             const scaledJUMP_STRENGTH = JUMP_STRENGTH * scaleFactor;
 
@@ -419,16 +421,17 @@
                 unicorn.velocityY = scaledJUMP_STRENGTH;
                 unicorn.jumpsLeft--;
                 unicorn.isGrounded = false;
-                createJumpParticles(scaleFactor); // Pass scale factor
+                createJumpParticles(scaleFactor); 
             }
         }
 
         function createJumpParticles(scaleFactor) {
-            for (let i = 0; i < 10; i++) {
+            // **FIX 4: Reduce the number of particles created per jump**
+            const PARTICLE_COUNT = 7; 
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
                 particles.push({
                     x: unicorn.x + unicorn.width / 2,
                     y: unicorn.y + unicorn.height,
-                    // Scale initial velocity and size
                     vx: (Math.random() - 0.5) * 2 * scaleFactor,
                     vy: (Math.random() * -2 - 1) * scaleFactor,
                     size: (Math.random() * 3 + 2) * scaleFactor,
@@ -436,12 +439,13 @@
                 });
             }
         }
+        
+        // ... (spawnObstacle, updateObstacles, checkCollisionsAndPasses, updateScore, resetGame, startGame, endGame, updateHighScoreDisplay are unchanged) ...
 
         function spawnObstacle() {
             const groundY = canvas.height * GROUND_HEIGHT_RATIO;
             const type = Math.random() > 0.4 ? 'rainbow' : 'cloud';
             
-            // FIX 2: Scale obstacle size based on device size
             const scaleFactor = canvas.width / REFERENCE_WIDTH;
             const baseObstacleWidth = 80;
             const baseRainbowHeight = 50;
@@ -466,7 +470,6 @@
                     cleared: false,
                 };
             } else {
-                // Clouds can be at different heights
                 const isHighCloud = Math.random() > 0.5;
                 const cloudY = isHighCloud ? groundY - highCloudOffset : groundY - cloudHeight;
                 obstacle = {
@@ -483,44 +486,36 @@
         }
 
         function updateObstacles() {
-            // Move existing obstacles
             for (let i = obstacles.length - 1; i >= 0; i--) {
-                // FIX 2: Use the scaled gameSpeed
                 obstacles[i].x -= gameSpeed;
-                // Remove obstacles that have moved off-screen
                 if (obstacles[i].x + obstacles[i].width < 0) {
                     obstacles.splice(i, 1);
                 }
             }
 
-            // Spawn new obstacles
             if (frameCount >= nextObstacleFrame) {
                 spawnObstacle();
-                // Randomize time until next obstacle, using REFERENCE_WIDTH to keep the logic consistent
                 nextObstacleFrame = frameCount + Math.floor(Math.random() * 60 + 900 / (BASE_GAME_SPEED + (score / 200) * 0.2));
             }
         }
         
         function checkCollisionsAndPasses() {
-            // FIX 2: Scale the collision padding
             const scaleFactor = canvas.width / REFERENCE_WIDTH;
             const scaledCOLLISION_PADDING = COLLISION_PADDING * scaleFactor;
 
             for (const obstacle of obstacles) {
-                // 1. Check for direct collision
                 if (unicorn.x < obstacle.x + obstacle.width - scaledCOLLISION_PADDING &&
                     unicorn.x + unicorn.width > obstacle.x + scaledCOLLISION_PADDING &&
                     unicorn.y < obstacle.y + obstacle.height - scaledCOLLISION_PADDING &&
                     unicorn.y + unicorn.height > obstacle.y + scaledCOLLISION_PADDING) {
-                    return true; // Collision detected
+                    return true; 
                 }
 
-                // 2. Check for passing under a high obstacle
                 if (!obstacle.cleared && obstacle.x + obstacle.width < unicorn.x) {
                     if (obstacle.isHigh && unicorn.isGrounded) {
-                        return true; // Game over for passing under
+                        return true; 
                     }
-                    obstacle.cleared = true; // Mark as successfully cleared
+                    obstacle.cleared = true; 
                 }
             }
             return false;
@@ -529,25 +524,19 @@
         function updateScore() {
             score++;
             scoreDisplay.textContent = Math.floor(score / 10);
-            // Increase speed gradually
             if (score > 0 && score % 200 === 0) {
-                // FIX 2: Update the BASE_GAME_SPEED value here for consistent increase
                 const newBaseSpeed = BASE_GAME_SPEED + 0.2 * (Math.floor(score / 200));
-                // Recalculate the actual gameSpeed based on the scaled factor
                 gameSpeed = newBaseSpeed * (canvas.width / REFERENCE_WIDTH);
             }
         }
 
         function resetGame() {
             score = 0;
-            // FIX 2: Reset the actual gameSpeed based on the current canvas size
             gameSpeed = BASE_GAME_SPEED * (canvas.width / REFERENCE_WIDTH);
-            // END FIX 2
-            
             obstacles = [];
             particles = [];
             frameCount = 0;
-            nextObstacleFrame = 150; // Give player more time at the start
+            nextObstacleFrame = 150; 
             unicorn.y = canvas.height * GROUND_HEIGHT_RATIO - unicorn.height;
             unicorn.velocityY = 0;
             unicorn.jumpsLeft = 2;
@@ -560,9 +549,8 @@
             isPlaying = true;
             startScreen.classList.add('hidden');
             gameOverScreen.classList.add('hidden');
-            // Make the first jump happen immediately on start
             jump();
-            gameLoop();
+            gameLoop(performance.now()); // Pass initial time
         }
 
         function endGame() {
@@ -579,51 +567,48 @@
             highScoreDisplay.textContent = `HI ${highScore}`;
         }
         
-        // Use a time-based loop instead of requestAnimationFrame for better speed consistency
-        // FIX 4: Use a time-based game loop for frame-rate independence
         let lastTime = 0;
         const targetFPS = 60;
         const targetFrameTime = 1000 / targetFPS;
 
         function gameLoop(currentTime) {
             if (!isPlaying) return;
-
-            // FIX 4: Calculate deltaTime
+            
+            // This is the correct implementation of the time-based loop
             const deltaTime = currentTime - lastTime;
-            lastTime = currentTime;
 
-            // Check if enough time has passed to render the next frame (optional, for throttling)
-            // It's often better to just use the deltaTime in updates
-            
-            // Clear the canvas for the next frame
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Only update and draw if enough time has passed (helps with stability)
+            if (deltaTime >= targetFrameTime) { 
+                lastTime = currentTime - (deltaTime % targetFrameTime); // Compensate for lag
+                
+                // Clear the canvas for the next frame
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Update game elements
-            frameCount++;
-            updateUnicorn(deltaTime); // Needs to be adapted for deltaTime, but we'll stick to frameCount for simplicity on this fix
-            updateObstacles();
-            updateScore();
-            
-            // Draw game elements
-            drawStars();
-            drawGround();
-            drawUnicorn();
-            drawObstacles();
-            updateAndDrawParticles();
+                // Update game elements
+                frameCount++;
+                updateUnicorn(); 
+                updateObstacles();
+                updateScore();
+                
+                // Draw game elements
+                drawStars();
+                drawGround();
+                drawUnicorn();
+                drawObstacles();
+                updateAndDrawParticles();
 
-            // Check for game-ending conditions
-            if (checkCollisionsAndPasses()) {
-                endGame();
-                return;
+                // Check for game-ending conditions
+                if (checkCollisionsAndPasses()) {
+                    endGame();
+                    return;
+                }
             }
-
-            // Request the next frame
+            // Request the next frame (even if we didn't update/draw, we keep waiting for the next time slice)
             requestAnimationFrame(gameLoop);
         }
-        // END FIX 4
 
-        // --- Event Listeners ---
-        
+        // --- Event Listeners and Initial Setup are unchanged ---
+
         function handleInput() {
             if (!isPlaying) {
                 startGame();
@@ -634,27 +619,23 @@
 
         window.addEventListener('keydown', (e) => {
             if (e.code === 'Space') {
-                e.preventDefault(); // Prevent page from scrolling
+                e.preventDefault(); 
                 handleInput();
             }
         });
         
         window.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // Prevent screen from zooming
+            e.preventDefault(); 
             handleInput();
         }, { passive: false });
 
         window.addEventListener('resize', resizeCanvas);
 
-        // --- Initial Setup ---
-        
         // Initial setup on page load
         resizeCanvas();
         updateHighScoreDisplay();
         drawGround();
         drawStars();
-        // The unicorn image onload will trigger the first draw
-
     </script>
 </body>
 </html>
