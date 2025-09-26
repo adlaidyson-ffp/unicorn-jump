@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Unicorn Jump</title>
     
-    <meta name="title" content="Unicorn Jump">
     <meta name="description" content="Unicorn Jump: A magical, retro-style endless runner game featuring a jumping unicorn! Playable on desktop and mobile.">
     <meta name="keywords" content="unicorn jump, retro game, endless runner, arcade, double jump, HTML5 game">
-    <meta name="author" content="Adlai Dyson | Fused Frame Photography">
+    <meta name="author" content="Leilani's Game">
     
     <link rel="icon" type="image/png" href="https://cdn.fusedframe.co.uk/unicorn-jump/logos/Unicorn-Jump-Favicon-(Transparent).png">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -32,21 +32,22 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
         }
 
-        /* *** START CHANGE: New Styles for the Game Title Banner *** */
+        /* Styles for the Game Title Banner */
         .game-title-banner {
             width: 100%;
-            max-width: 350px; /* Max width to keep it proportionate to the game box */
-            margin-bottom: 20px; /* Space between logo and game box */
+            /* *** START CHANGE: Adjusted max-width from 650px to 350px *** */
+            max-width: 350px; 
+            /* *** END CHANGE *** */
+            margin-bottom: 20px; 
             text-align: center;
         }
 
         .game-title-banner img {
-            width: 90%; /* Responsive width */
+            width: 90%; 
             height: auto;
             opacity: 0.95;
-            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4)); /* Glow effect */
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4)); 
         }
-        /* *** END CHANGE *** */
 
         /* Container for the game canvas and UI elements */
         .game-container {
@@ -153,6 +154,7 @@
     <div class="game-title-banner">
         <img src="https://cdn.fusedframe.co.uk/unicorn-jump/logos/Unicorn-Jump-Banner-Logo-(Transparent).png" alt="Unicorn Jump Logo">
     </div>
+
     <div class="game-container">
         <canvas id="gameCanvas"></canvas>
         <div id="startScreen" class="message-overlay">
@@ -171,7 +173,7 @@
     <footer>
         <img src="https://cdn.fusedframe.co.uk/main-logos/png/Banner%20Logo%20(No%20Circle)%20Light%20(Transparent).png" alt="Banner Logo">
         <p>Made for Leilani</p>
-        <a href="#" class="github-btn">View on GitHub</a>
+        <a href="adffp.uk/uni-jump-github" class="github-btn">View on GitHub</a>
     </footer>
 
     <script>
@@ -212,7 +214,9 @@
 
         // Unicorn properties
         const unicorn = {
-            x: 50,
+            /* *** START CHANGE: Moved unicorn to the left (from 50 to 10) to give more reaction time *** */
+            x: 10, 
+            /* *** END CHANGE *** */
             y: 0, // Will be set dynamically
             width: 85, 
             height: 85, 
