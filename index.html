@@ -24,22 +24,26 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            /* *** START CHANGE: Set height to 100vh and hide overflow to prevent scrolling *** */
+            height: 100vh; /* Use height: 100vh instead of min-height */
+            overflow: hidden; /* This is the key to preventing unwanted scrolling */
+            /* *** END CHANGE *** */
+            
             font-family: 'Press Start 2P', cursive;
             background: linear-gradient(135deg, #4c1d2e, #2c1a3b); /* Darker background */
             color: #fff;
-            overflow: hidden;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
         }
 
         /* Styles for the Game Title Banner */
         .game-title-banner {
             width: 100%;
-            /* *** START CHANGE: Adjusted max-width from 650px to 350px *** */
             max-width: 350px; 
-            /* *** END CHANGE *** */
             margin-bottom: 20px; 
             text-align: center;
+            /* *** START CHANGE: Allow banner to shrink on small screens if necessary *** */
+            min-height: 0;
+            /* *** END CHANGE *** */
         }
 
         .game-title-banner img {
@@ -53,14 +57,16 @@
         .game-container {
             position: relative;
             width: 90vw;
-            height: 80vh;
+            /* *** START CHANGE: Use flex-grow to make the game container dynamically fill the available vertical space *** */
+            flex-grow: 1; 
+            /* *** END CHANGE *** */
             max-width: 800px;
-            max-height: 500px;
+            max-height: 500px; /* Kept max-height to maintain aspect ratio on larger screens */
             border: 4px solid #fff;
             border-radius: 20px;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), inset 0 0 15px rgba(255, 255, 255, 0.3);
             overflow: hidden;
-            background: linear-gradient(135deg, #ffc0cb, #d3a2e2); /* Original gradient on the game box */
+            background: linear-gradient(135deg, #ffc0cb, #d3a2e2); 
         }
         /* The main game canvas */
         canvas {
@@ -122,6 +128,9 @@
             flex-direction: column;
             align-items: center;
             gap: 15px;
+            /* *** START CHANGE: Allow footer to shrink on small screens if necessary *** */
+            min-height: 0;
+            /* *** END CHANGE *** */
         }
         footer img {
             width: 130px;
@@ -173,7 +182,7 @@
     <footer>
         <img src="https://cdn.fusedframe.co.uk/main-logos/png/Banner%20Logo%20(No%20Circle)%20Light%20(Transparent).png" alt="Banner Logo">
         <p>Made for Leilani</p>
-        <a href="adffp.uk/uni-jump-github" class="github-btn">View on GitHub</a>
+        <a href="#" class="github-btn">View on GitHub</a>
     </footer>
 
     <script>
@@ -214,9 +223,7 @@
 
         // Unicorn properties
         const unicorn = {
-            /* *** START CHANGE: Moved unicorn to the left (from 50 to 10) to give more reaction time *** */
             x: 10, 
-            /* *** END CHANGE *** */
             y: 0, // Will be set dynamically
             width: 85, 
             height: 85, 
