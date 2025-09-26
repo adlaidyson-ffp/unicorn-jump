@@ -24,10 +24,8 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            /* *** START CHANGE: Set height to 100vh and hide overflow to prevent scrolling *** */
-            height: 100vh; /* Use height: 100vh instead of min-height */
-            overflow: hidden; /* This is the key to preventing unwanted scrolling */
-            /* *** END CHANGE *** */
+            height: 100vh; 
+            overflow: hidden; 
             
             font-family: 'Press Start 2P', cursive;
             background: linear-gradient(135deg, #4c1d2e, #2c1a3b); /* Darker background */
@@ -41,9 +39,7 @@
             max-width: 350px; 
             margin-bottom: 20px; 
             text-align: center;
-            /* *** START CHANGE: Allow banner to shrink on small screens if necessary *** */
             min-height: 0;
-            /* *** END CHANGE *** */
         }
 
         .game-title-banner img {
@@ -57,11 +53,11 @@
         .game-container {
             position: relative;
             width: 90vw;
-            /* *** START CHANGE: Use flex-grow to make the game container dynamically fill the available vertical space *** */
             flex-grow: 1; 
+            /* *** START CHANGE: Increased but CAPPED Max Size to prevent performance lag *** */
+            max-width: 900px; /* Increased max-width */
+            max-height: 600px; /* Increased max-height */
             /* *** END CHANGE *** */
-            max-width: 800px;
-            max-height: 500px; /* Kept max-height to maintain aspect ratio on larger screens */
             border: 4px solid #fff;
             border-radius: 20px;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), inset 0 0 15px rgba(255, 255, 255, 0.3);
@@ -128,9 +124,7 @@
             flex-direction: column;
             align-items: center;
             gap: 15px;
-            /* *** START CHANGE: Allow footer to shrink on small screens if necessary *** */
             min-height: 0;
-            /* *** END CHANGE *** */
         }
         footer img {
             width: 130px;
@@ -234,6 +228,10 @@
 
         // Resize the canvas to fit its container
         function resizeCanvas() {
+            /* * IMPORTANT: The canvas needs its internal resolution (width/height) 
+             * set to match the display size (clientWidth/clientHeight) 
+             * to prevent blurry/stretched rendering and maintain performance.
+            */
             canvas.width = canvas.clientWidth;
             canvas.height = canvas.clientHeight;
             unicorn.y = canvas.height * GROUND_HEIGHT_RATIO - unicorn.height; // Set initial y position
